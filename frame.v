@@ -83,7 +83,7 @@ endmodule
 
 
 // Datapath module
-module datapath(data_in, clock, reset_n, enable1, c_q);
+module datapath(clock, reset_n, enable1, c_q);
 	input 			    reset_n, enable1, clock;
 	input 	[6:0] 	data_in;
 	output  [3:0]   c_q;
