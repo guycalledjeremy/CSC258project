@@ -1,11 +1,11 @@
 module frame	(
 		CLOCK_50,						//	On Board 50 MHz
 		// Your inputs and outputs here
-    reset,
-    go,
-    x_v,
-    y_v,
-    c_v,
+        reset,
+        go,
+        x_v,
+        y_v,
+        c_v,
 		// The ports below are for the VGA output.  Do not change.
 		VGA_CLK,   						 //	VGA Clock
 		VGA_HS,							   //	VGA H_SYNC
@@ -18,22 +18,22 @@ module frame	(
 	);
 
 	input		    CLOCK_50;				//	50 MHz
-  input       reset;
-  input       go;
-  input [7:0] x_v;
-  input [6:0] y_v;
-  input [2:0] c_v;
+    input           reset;
+    input           go;
+    input [7:0]     x_v;
+    input [6:0]     y_v;
+    input [2:0]     c_v;
 
 	// Declare your inputs and outputs here
 	// Do not change the following outputs
 	output			VGA_CLK;   				//	VGA Clock
 	output			VGA_HS;					//	VGA H_SYNC
 	output			VGA_VS;					//	VGA V_SYNC
-	output			VGA_BLANK_N;				//	VGA BLANK
+	output			VGA_BLANK_N;			//	VGA BLANK
 	output			VGA_SYNC_N;				//	VGA SYNC
-	output	    [9:0]	VGA_R;   				//	VGA Red[9:0]
-	output	    [9:0]	VGA_G;	 				//	VGA Green[9:0]
-	output	    [9:0]	VGA_B;   				//	VGA Blue[9:0]
+	output	    [9:0]	VGA_R;   			//	VGA Red[9:0]
+	output	    [9:0]	VGA_G;	 			//	VGA Green[9:0]
+	output	    [9:0]	VGA_B;   			//	VGA Blue[9:0]
 
 
 	assign resetn = reset;
@@ -63,22 +63,22 @@ module frame	(
 			.VGA_SYNC(VGA_SYNC_N),
 			.VGA_CLK(VGA_CLK));
 	  defparam VGA.RESOLUTION = "160x120";
-		defparam VGA.MONOCHROME = "FALSE";
+	  defparam VGA.MONOCHROME = "FALSE";
 
 
-		defparam VGA.BITS_PER_COLOUR_CHANNEL = 1;
-		defparam VGA.BACKGROUND_IMAGE = "black.mif";
+	  defparam VGA.BITS_PER_COLOUR_CHANNEL = 1;
+	  defparam VGA.BACKGROUND_IMAGE = "black.mif";
 
 	// Put your code here. Your code should produce signals x,y,colour and writeEn/plot
 	// for the VGA controller, in addition to any other functionality your design may require.
 
-  // Instansiate datapath
+    // Instansiate datapath
 	// datapath d0(...);
       datapath d0(CLOCK_50,KEY[0],enable, cq);
 
-  // Instansiate FSM control
-  // control c0(...);
-	    control c0(cq, ~KEY[3],KEY[0],~KEY[1],CLOCK_50,enable,ld_x,ld_y,ld_c,writeEn);
+    // Instansiate FSM control
+    // control c0(...);
+	  control c0(cq, ~KEY[3],KEY[0],~KEY[1],CLOCK_50,enable,ld_x,ld_y,ld_c,writeEn);
 endmodule
 // end main module
 
@@ -145,11 +145,11 @@ endmodule
 
 
 // Control module
-module control(c_q, go,reset_n,KEY,clock,enable,ld_x,ld_y,ld_c,plot);
+module control(c_q, go,reset_n,KEY,clock,enable,plot);
 		input go,reset_n,clock,KEY;
 		input [3:0] c_q;
 
-		output reg enable,ld_x,ld_y,ld_c,plot;
+		output reg enable,plot;
 
 		reg [3:0] current_state, next_state;
 
