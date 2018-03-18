@@ -35,7 +35,6 @@ module frame	(
 	output	    [9:0]	VGA_G;	 			//	VGA Green[9:0]
 	output	    [9:0]	VGA_B;   			//	VGA Blue[9:0]
 
-
 	assign resetn = reset;
 
 	// Create the writeEn wires that are inputs to the controller.
@@ -90,13 +89,13 @@ module datapath(data_in, clock, reset_n, enable1, c_q);
 	output  [3:0]   c_q;
 
 	wire    [1:0]   c1, c2;
-  // Counters for x and y.
-  // This datapath is drawing a 2^4 * 2^4 block.
-  wire    [3:0]   count1;
+    // Counters for x and y.
+    // This datapath is drawing a 2^4 * 2^4 block.
+    wire    [3:0]   count1;
 	counterx m1(clock, reset_n, enable1, count1);
-  wire count2 = | count1;
-  wire enable2;
-  countery m2(clock, reset_n, enable2, count2);
+    wire count2 = | count1;
+    wire enable2;
+    countery m2(clock, reset_n, enable2, count2);
 
 	assign c_q = count2;
 	assign c1[1:0] = count[3:2];
