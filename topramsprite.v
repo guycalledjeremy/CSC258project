@@ -1,4 +1,4 @@
-`include "ramsprite.v"    
+//`include "ramsprite.v"
 
 module topramsprite(clk, addr_read, out);
 
@@ -42,7 +42,10 @@ module readSnowman(clk, address, value, wren);
 	reg [5:0] x_val;
 	reg [5:0] y_val;
 	reg stop_val;
+	
+	reg [2:0] color;
 	`define NULL 0    
+	
 
 
 initial begin
