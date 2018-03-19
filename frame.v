@@ -1,28 +1,25 @@
 module frame	(
-		CLOCK_50,						//	On Board 50 MHz
-		// Your inputs and outputs here
-        reset,
+		CLOCK_50,						   //	On Board 50 MHz
+		// My inputs and outputs here
+        resetn,
         go,
         x_v,
         y_v,
         c_v,
 		// The ports below are for the VGA output.  Do not change.
-		VGA_CLK,   						 //	VGA Clock
+		VGA_CLK,   						   //	VGA Clock
 		VGA_HS,							   //	VGA H_SYNC
 		VGA_VS,							   //	VGA V_SYNC
-		VGA_BLANK_N,					 //	VGA BLANK
-		VGA_SYNC_N,						 //	VGA SYNC
-		VGA_R,   						   //	VGA Red[9:0]
-		VGA_G,	 						   //	VGA Green[9:0]
+		VGA_BLANK_N,					   //	VGA BLANK
+		VGA_SYNC_N,						   //	VGA SYNC
+		VGA_R,   					       //	VGA Red[9:0]
+		VGA_G,	 				      	   //	VGA Green[9:0]
 		VGA_B   						   //	VGA Blue[9:0]
 	);
 
 	input		    CLOCK_50;				//	50 MHz
-    input           reset;
+    input           resetn;
     input           go;
-    input [7:0]     x_v;
-    input [6:0]     y_v;
-    input [2:0]     c_v;
 
 	// Declare your inputs and outputs here
 	// Do not change the following outputs
@@ -35,12 +32,13 @@ module frame	(
 	output	    [9:0]	VGA_G;	 			//	VGA Green[9:0]
 	output	    [9:0]	VGA_B;   			//	VGA Blue[9:0]
 
-	assign resetn = reset;
-
 	// Create the writeEn wires that are inputs to the controller.
+    wire reset = resetn;
 	wire writeEn;
-	wire enable;
-	wire [3:0] cq;
+    wire [7:0]     x_v;
+    wire [6:0]     y_v;
+    wire [2:0]     c_v;
+
 
 	// Create an Instance of a VGA controller - there can be only one!
 	// Define the number of colours as well as the initial background
@@ -70,129 +68,76 @@ module frame	(
 
 	// Put your code here. Your code should produce signals x,y,colour and writeEn/plot
 	// for the VGA controller, in addition to any other functionality your design may require.
+    wire next;
+	wire enable;
+	wire [3:0]     cq;
 
     // Instansiate datapath
 	// datapath d0(...);
-      datapath d0(CLOCK_50,KEY[0],enable, cq);
+      datapath d0(CLOCK_50,reset,enable,next, c_v, x_v, y_v, cq);
 
     // Instansiate FSM control
     // control c0(...);
-	  control c0(cq, ~KEY[3],KEY[0],~KEY[1],CLOCK_50,enable,ld_x,ld_y,ld_c,writeEn);
+	  control c0(cq,go,rest,CLOCK_50,enable,writeEn,next);
 endmodule
 // end main module
 
 
 // Datapath module
-module datapath(clock, reset_n, enable1, c_q);
-	input 			    reset_n, enable1, clock;
-	input 	[6:0] 	data_in;
-	output  [3:0]   c_q;
+module datapath(clock, reset_n, enable1, next_p, colour, x_v, y_v, c_q);
+    	input 			    reset_n, enable1, clock;
+        input               next_p;
+        output  [7:0]   x_v;
+        output  [6:0]   y_v;
+        output  [2:0]   colour;
+    	output  [3:0]   c_q;
 
-	wire    [1:0]   c1, c2;
-    // Counters for x and y.
-    // This datapath is drawing a 2^4 * 2^4 block.
-    wire    [3:0]   count1;
-	counterx m1(clock, reset_n, enable1, count1);
-    wire count2 = | count1;
-    wire enable2;
-    countery m2(clock, reset_n, enable2, count2);
+        // The datapath should be instansiating a RAM file, reading data about the
+        // next pixel from it.
 
-	assign c_q = count2;
-	assign c1[1:0] = count[3:2];
-	assign c2[1:0] = count[1:0];
-	assign X = x1 + c1;
-	assign Y = y1 + c2;
-	assign Colour = co1;
 endmodule
 // end Datapath module
 
 
-// Counterx module
-module counterx(clock, reset_n, enable, q);
-	input 				clock, reset_n, enable;
-	output   reg 	[3:0] 	q;
-
-	always @(posedge clock) begin
-		if(reset_n == 1'b0)
-			q <= 4'b0000;
-		else if (enable == 1'b1)
-			q <= q + 1'b1;
-		  if (q == 4'b1111) begin
-			   q <= 4'd0;
-		  end
-   end
-endmodule
-// end Counterx module
-
-
-// Countery module
-module countery(clock, reset_n, enable, q);
-	input 				clock, reset_n, enable;
-	output   reg 	[3:0] 	q;
-
-	always @(posedge clock) begin
-		if(reset_n == 1'b0)
-			q <= 4'b0000;
-		else if (enable == 1'b1)
-			q <= q + 1'b1;
-		if (q == 4'b1111) begin
-			q <= 4'd0;
-		end
-   end
-endmodule
-// end Countery module
-
-
 // Control module
-module control(c_q, go,reset_n,KEY,clock,enable,plot);
-		input go,reset_n,clock,KEY;
-		input [3:0] c_q;
-
-		output reg enable,plot;
+module control(c_q, go,reset_n,clock,enable,plot,next_p);
+        input [3:0] c_q;
+		input go,reset_n,clock;
+		output reg enable,plot,next_p;
 
 		reg [3:0] current_state, next_state;
 
-		localparam  S_LOAD_X        = 3'd0,
-                S_LOAD_X_WAIT   = 3'd1,
-                S_LOAD_Y        = 3'd2,
-                S_LOAD_Y_WAIT   = 3'd3,
-					      S_CYCLE_0       = 3'd4;
+		localparam  S_READ_FILE       = 2'd0,
+                    S_CYCLE           = 2'd1,
+                    S_END_DRAW        = 2'd2;
 
 		always@(*)
-      begin: state_table
+        begin: state_table
             case (current_state)
-                S_LOAD_X: next_state = go ? S_LOAD_X_WAIT : S_LOAD_X;
-                S_LOAD_X_WAIT: next_state = go ? S_LOAD_X_WAIT : S_LOAD_Y;
-                S_LOAD_Y: next_state = KEY ? S_LOAD_Y_WAIT : S_LOAD_Y;
-                S_LOAD_Y_WAIT: next_state = KEY ? S_LOAD_Y_WAIT : S_CYCLE_0;
-                S_CYCLE_0: next_state = ({&c_q} == 1'b0) ? S_LOAD_X : S_CYCLE_0;
-            default:     next_state = S_LOAD_X;
-        endcase
-      end
+                S_READ_FILE: next_state = (read == 1'b1) ? S_CYCLE : S_READ_FILE;
+                S_CYCLE: next_state = (go_s == 1'b1) ? S_END_DRAW : S_CYCLE;
+                S_END_DRAW: next_state =  S_READ_FILE;
+            default:     next_state = S_READ_FILE;
+            endcase
+        end
 
 		always@(*)
-      begin: enable_signals
+        begin: enable_signals
         // By default make all our signals 0
-        ld_x = 1'b0;
-        ld_y = 1'b0;
-		    enable = 1'b0;
+        next = 1'b0;
+		enable = 1'b0;
 
 		  case(current_state)
-				S_LOAD_X:begin
-					ld_x = 1'b1;
-				  plot = 1'b0;
-					ld_c = 1'b1;
+				S_READ_FILE:begin
+                    // Send signal to datapath to start reading from RAM
 					end
-				S_LOAD_Y:begin
-					ld_y = 1'b1;
+				S_CYCLE:begin
+                    enable = 1'b1;
+                    next = 1'b1;
 					end
-        S_LOAD_Y_WAIT:begin
-          plot = 1'b1;
-          end
-				S_CYCLE_0:begin
-					enable = 1'b1;
-					ld_c = 1'b1;
-					end
+                S_END_DRAW:begin
+                    // Maybe do nothing?
+                    end
 		  endcase
 		end
 
