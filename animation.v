@@ -15,7 +15,7 @@ module animation(
 
       input CLOCK_50;
       input reset;
-      input go,
+      input go;
       // Declare your inputs and outputs here
       // Do not change the following outputs
       output		VGA_CLK;   				//	VGA Clock
@@ -28,7 +28,7 @@ module animation(
       output	    [9:0]	VGA_B;   		//	VGA Blue[9:0]
 
       wire [7:0] x;
-      wire [6:0] y;
+      wire [5:0] y;
       wire erase_e;
 
       frame	f0(
@@ -48,7 +48,7 @@ module animation(
         .VGA_SYNC_N(VGA_SYNC_N),					//	VGA SYNC
         .VGA_R(VGA_R),   						    //	VGA Red[9:0]
         .VGA_G(VGA_G),	 						    //	VGA Green[9:0]
-        .VGA_B(VGA_B);   						    //	VGA Blue[9:0]
+        .VGA_B(VGA_B));   						    //	VGA Blue[9:0]
 
     // The feedback wire between datapath and control,
     // dictate if we finished the drawing process.
@@ -58,15 +58,13 @@ module animation(
 
     control c0(CLOCK_50, reset, d, doe, dod);
 
-  );
-
 endmodule
 
 module datapath(clk, resetn, plot, do_e, do_d, x_v, y_v, erase, d);
     input clk, resetn, plot;
     input do_e, do_d;
     output [7:0] x_v;
-    output [6:0] reg y_v;
+    output reg [5:0] y_v;
     output reg erase;
     output reg d;
 
@@ -90,17 +88,19 @@ module datapath(clk, resetn, plot, do_e, do_d, x_v, y_v, erase, d);
     always @(posedge clk) begin
         // Reset block
         if (!resetn) begin
-            x <- 7'd160;
-            y_v <- y[5:0];
+            x <= 8'd160;
+            y_v <= y[5:0];
+	    d <= 1'b0;
+	    erase <= 1'b0;
         end
         // Function block
         else begin
             // Begin moving
             if (move) begin
                 // Erase the frame if the image hit the left
-                if (x - 1 == 7'd0) begin
-                    erase <- 1'b1;
-                    d <- 1'b0;
+                if (x - 1 == 8'd0) begin
+                    erase <= 1'b1;
+                    d <= 1'b0;
                 end
                 // Move the image if we want to move it:
                 //     step 1: Erase the old image
@@ -108,12 +108,12 @@ module datapath(clk, resetn, plot, do_e, do_d, x_v, y_v, erase, d);
                 else begin
                     // step 1
                     if (do_e == 1'b1) begin
-                        erase <- 1'b1;
+                        erase <= 1'b1;
                     end
                     // step 2
                     if (do_d == 1'b1) begin
-                        x <- x - 1'b1;
-                        d <- 1'b1;
+                        x <= x - 1'b1;
+                        d <= 1'b1;
                     end
                 end
             end
@@ -165,12 +165,12 @@ endmodule
 
 module control(clock, reset_n, d, do_e, do_d);
     input clock, reset_n, d;
-    output do_e, do_d;
+    output reg do_e, do_d;
 
     reg [3:0] current_state, next_state;
 
-    localparam  S_CYCLE_WAIT = 2'd0;
-                S_CYCLE_E = 2'd1;
+    localparam  S_CYCLE_WAIT = 2'd0,
+                S_CYCLE_E = 2'd1,
                 S_CYCLE_D = 2'd2;
 
     always@(*)
@@ -186,8 +186,8 @@ module control(clock, reset_n, d, do_e, do_d);
     always@(*)
     begin: enable_signals
     // By default make all our signals 0
-        do_e = 1'b0;
-        do_d = 1'b0;
+        do_e <= 1'b0;
+        do_d <= 1'b0;
 
         case(current_state)
             S_CYCLE_WAIT:begin
@@ -195,11 +195,11 @@ module control(clock, reset_n, d, do_e, do_d);
             end
             S_CYCLE_E:begin
             // The drawing process: Erase the old image
-            do_e = 1'b1;
+            do_e <= 1'b1;
             end
             S_CYCLE_D:begin
             // The drawing process: Draw the new image
-            do_d = 1'b1;
+            do_d <= 1'b1;
             end
         endcase
     end
@@ -207,7 +207,7 @@ module control(clock, reset_n, d, do_e, do_d);
     always@(posedge clock)
     begin: state_FFs
       if(!reset_n)
-          current_state <= S_LOAD_X;
+          current_state <= S_CYCLE_WAIT;
       else
           current_state <= next_state;
     end
@@ -219,18 +219,19 @@ module slowcounter(enable, clk, reset, go);
   input enable, clk, reset;
   output go;
 
-  wire [5:0] q;
+  wire [19:0] q;
   // 833,333 hz --> 1/60 second
-  ratedivider(enable, 20'11001011011100110101, clk, reset, q);
-  go = (q == 6'd0) ? 1 : 0;
+  ratedivider r0(enable, 20'b11001011011100110101, clk, reset, q);
+
+  assign go = (q == 20'd0) ? 1'b1 : 1'b0;
 
 endmodule
 
 
 module ratedivider(enable, load, clk, reset, q);
 	input enable, clk, reset;
-	input [5:0] load;
-	output reg [5:0] q;
+	input [19:0] load;
+	output reg [19:0] q;
 
 	initial q = load;
 
