@@ -66,7 +66,7 @@ module datapath(clk, resetn, plot, do_e, do_d, x_v, y_v, erase, d);
     input clk, resetn, plot;
     input do_e, do_d;
     output [7:0] x_v;
-    output [6:0] y_v;
+    output [6:0] reg y_v;
     output reg erase;
     output reg d;
 
@@ -74,8 +74,9 @@ module datapath(clk, resetn, plot, do_e, do_d, x_v, y_v, erase, d);
     // the whole image.
     // x(changing) --> through counterx
     // y(constant).
-    wire [7:0] x;
-    wire [6:0] y;
+    reg [7:0] x;
+    wire [9:0] y;
+    LFSR lfsr0(clk, reset, plot, y);
 
     // Instantiate a randomdize module to get the y
     // y = random();
@@ -90,6 +91,7 @@ module datapath(clk, resetn, plot, do_e, do_d, x_v, y_v, erase, d);
         // Reset block
         if (!resetn) begin
             x <- 7'd160;
+            y_v <- y[5:0];
         end
         // Function block
         else begin
@@ -119,7 +121,44 @@ module datapath(clk, resetn, plot, do_e, do_d, x_v, y_v, erase, d);
     end
 
     assign x_v = x;
-    assign y_v = y;
+
+endmodule
+
+
+module LFSR (clk, reset, enable, out);
+	input clk, reset, enable;
+	// ToDo: make a counter hooked to enable so that there is a gap between each spawn. Make spawn reset the counter.
+	output reg [9:0] out;
+	// ToDo: set bits of out to match y-value of screen resolution - height of objects
+	reg spawn;
+
+	reg [9:0] value;
+	wire linear_feedback;
+
+	assign linear_feedback = (value[1] ^ value[0]);
+
+	initial out = 10'b0;
+	initial spawn = 0;
+	initial value = 10'b0010010100;
+
+	always @ (posedge clk, posedge reset) begin
+		if (reset) begin
+		// seed
+		value <= 10'b0010010100;
+		// ToDo: adjust out bits if necessary
+		out <= 10'b0;
+		spawn <= 0;
+		end
+		else if (enable) begin
+		value <= {linear_feedback,value[9],value[8],value[7],value[6],value[5],value[4],value[3],value[2],value[1]};
+		out <= value[9:0];
+		spawn <= linear_feedback;
+		end
+		else begin
+		out <= 10'b0;
+		spawn <= 0;
+		end
+	end
 
 endmodule
 
