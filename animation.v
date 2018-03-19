@@ -54,9 +54,9 @@ module animation(
     // dictate if we finished the drawing process.
     wire d, doe, dod;
 
-    datapath d0(clock, resetn, plot, doe, dod, x, y, erase_e, d);
+    datapath d0(CLOCK_50, reset, go, doe, dod, x, y, erase_e, d);
 
-    control c0(clock, resetn, d, doe, dod);
+    control c0(CLOCK_50, reset, d, doe, dod);
 
   );
 
@@ -76,7 +76,7 @@ module datapath(clk, resetn, plot, do_e, do_d, x_v, y_v, erase, d);
     // y(constant).
     reg [7:0] x;
     wire [9:0] y;
-    LFSR lfsr0(clk, reset, plot, y);
+    LFSR lfsr0(clk, resetn, plot, y);
 
     // Instantiate a randomdize module to get the y
     // y = random();
