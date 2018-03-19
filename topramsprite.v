@@ -2,7 +2,7 @@
 
 module topramsprite(clk, addr_read, out);
 
-	input clk //should be CLOCK_50
+	input clk; //should be CLOCK_50
 	input [9:0] addr_read;
 	output [15:0] out;
 	
@@ -12,7 +12,7 @@ module topramsprite(clk, addr_read, out);
 	wire [9:0] addr_write;
 	
 	ramsprite snowman(address, clk, value, wren, out);
-	readSnowman snow0(clk, addr_write, value, wren)
+	readSnowman snow0(clk, addr_write, value, wren);
 	
 	always @(posedge clk) begin
 		if (wren == 1'b1) begin
@@ -29,20 +29,20 @@ endmodule
 
 module readSnowman(clk, address, value, wren);
 
-	input clk
+	input clk;
 	
 	output reg [15:0] value;
 	output reg [9:0] address;
 	output reg wren;
 
-integer               data_file    ; // file handler
-integer               scan_file    ; // file handler
+	integer               data_file    ; // file handler
+	integer               scan_file    ; // file handler
 
-reg [2:0] color_val;
-reg [5:0] x_val;
-reg [5:0] y_val;
-reg stop_val;
-`define NULL 0    
+	reg [2:0] color_val;
+	reg [5:0] x_val;
+	reg [5:0] y_val;
+	reg stop_val;
+	`define NULL 0    
 
 
 initial begin
@@ -81,3 +81,4 @@ always @(posedge clk) begin
 end
 
 endmodule
+
