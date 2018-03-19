@@ -3,6 +3,7 @@ module frame	(
 		// My inputs and outputs here
         resetn,
         go,
+        erase,
         x,
         y,
 		// The ports below are for the VGA output.  Do not change.
@@ -19,6 +20,7 @@ module frame	(
 	input		    CLOCK_50;				//	50 MHz
     input           resetn;
     input           go;
+    input           erase;
 	input	[7:0]	x;
 	input	[6:0] 	y;
 	// Declare your inputs and outputs here
@@ -74,7 +76,7 @@ module frame	(
 
     // Instansiate datapath
 	// datapath d0(...);
-      datapath d0(CLOCK_50,reset,enable,next, x, y, c_v, x_v, y_v, cq);
+      datapath d0(CLOCK_50,reset,enable,erase,next, x, y, c_v, x_v, y_v, cq);
 
     // Instansiate FSM control
     // control c0(...);
@@ -84,8 +86,9 @@ endmodule
 
 
 // Datapath module
-module datapath(clock, reset_n, enable1, next_p, x, y, colour, x_v, y_v, c_q);
+module datapath(clock, reset_n, enable1, erase, next_p, x, y, colour, x_v, y_v, c_q);
     	input 			    reset_n, enable1, clock;
+        input               erase;
         input               next_p;
 		// The location of the image
 		input   [7:0]   x;
@@ -98,6 +101,10 @@ module datapath(clock, reset_n, enable1, next_p, x, y, colour, x_v, y_v, c_q);
 
         // The datapath should be instansiating a RAM file, reading data about the
         // next pixel from it.
+
+        // if (erase) begin
+        //     c_v <- 3'b111;
+        // end
 
 endmodule
 // end Datapath module
