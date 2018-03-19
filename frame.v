@@ -3,9 +3,8 @@ module frame	(
 		// My inputs and outputs here
         resetn,
         go,
-        x_v,
-        y_v,
-        c_v,
+        x,
+        y,
 		// The ports below are for the VGA output.  Do not change.
 		VGA_CLK,   						   //	VGA Clock
 		VGA_HS,							   //	VGA H_SYNC
@@ -20,7 +19,8 @@ module frame	(
 	input		    CLOCK_50;				//	50 MHz
     input           resetn;
     input           go;
-
+	input	[7:0]	x;
+	input	[6:0] 	y;
 	// Declare your inputs and outputs here
 	// Do not change the following outputs
 	output			VGA_CLK;   				//	VGA Clock
@@ -74,7 +74,7 @@ module frame	(
 
     // Instansiate datapath
 	// datapath d0(...);
-      datapath d0(CLOCK_50,reset,enable,next, c_v, x_v, y_v, cq);
+      datapath d0(CLOCK_50,reset,enable,next, x, y, c_v, x_v, y_v, cq);
 
     // Instansiate FSM control
     // control c0(...);
@@ -84,9 +84,13 @@ endmodule
 
 
 // Datapath module
-module datapath(clock, reset_n, enable1, next_p, colour, x_v, y_v, c_q);
+module datapath(clock, reset_n, enable1, next_p, x, y, colour, x_v, y_v, c_q);
     	input 			    reset_n, enable1, clock;
         input               next_p;
+		// The location of the image
+		input   [7:0]   x;
+		input   [6:0]   y;
+		// The location of each pixel
         output  [7:0]   x_v;
         output  [6:0]   y_v;
         output  [2:0]   colour;
