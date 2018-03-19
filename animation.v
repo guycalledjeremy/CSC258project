@@ -82,7 +82,7 @@ module datapath(clk, resetn, plot, do_e, do_d, x_v, y_v, erase, d);
     // assign y_v = y;
 
     wire move;
-    slowcounter s0(enable, clk, reset, move);
+    slowcounter s0(plot, clk, resetn, move);
 
     // Start moving.
     // Shifter start
