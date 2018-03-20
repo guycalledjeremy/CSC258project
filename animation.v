@@ -30,9 +30,9 @@ module animation(
       wire [7:0] x;
       wire [5:0] y_value;
       wire erase_e;
-		
-	wire [5:0] y;
-	assign y = (!reset) ? y_value : y;
+
+	  wire [5:0] y;
+	  assign y = (!reset) ? y_value : y;
 
       frame	f0(
         .CLOCK_50(CLOCK_50),						//	On Board 50 MHz
