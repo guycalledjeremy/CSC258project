@@ -28,8 +28,11 @@ module animation(
       output	    [9:0]	VGA_B;   		//	VGA Blue[9:0]
 
       wire [7:0] x;
-      wire [5:0] y;
+      wire [5:0] y_value;
       wire erase_e;
+		
+	wire [5:0] y;
+	assign y = (!reset) ? y_value : y;
 
       frame	f0(
         .CLOCK_50(CLOCK_50),						//	On Board 50 MHz
@@ -54,7 +57,7 @@ module animation(
     // dictate if we finished the drawing process.
     wire d, doe, dod;
 
-    datapath d0(CLOCK_50, reset, go, doe, dod, x, y, erase_e, d);
+    datapath d0(CLOCK_50, reset, go, doe, dod, x, y_value, erase_e, d);
 
     control c0(CLOCK_50, reset, d, doe, dod);
 
@@ -64,7 +67,7 @@ module datapath(clk, resetn, plot, do_e, do_d, x_v, y_v, erase, d);
     input clk, resetn, plot;
     input do_e, do_d;
     output [7:0] x_v;
-    output reg [5:0] y_v;
+    output [5:0] y_v;
     output reg erase;
     output reg d;
 
@@ -89,7 +92,6 @@ module datapath(clk, resetn, plot, do_e, do_d, x_v, y_v, erase, d);
         // Reset block
         if (!resetn) begin
             x <= 8'd160;
-            y_v <= y[5:0];
 	    d <= 1'b0;
 	    erase <= 1'b0;
         end
@@ -98,7 +100,7 @@ module datapath(clk, resetn, plot, do_e, do_d, x_v, y_v, erase, d);
             // Begin moving
             if (move) begin
                 // Erase the frame if the image hit the left
-                if (x - 1 == 8'd0) begin
+                if (x == 8'd0) begin
                     erase <= 1'b1;
                     d <= 1'b0;
                 end
@@ -114,6 +116,7 @@ module datapath(clk, resetn, plot, do_e, do_d, x_v, y_v, erase, d);
                     if (do_d == 1'b1) begin
                         x <= x - 1'b1;
                         d <= 1'b1;
+								erase <= 1'b0;
                     end
                 end
             end
@@ -121,6 +124,7 @@ module datapath(clk, resetn, plot, do_e, do_d, x_v, y_v, erase, d);
     end
 
     assign x_v = x;
+	assign y_v = y[5:0];
 
 endmodule
 
@@ -233,11 +237,9 @@ module ratedivider(enable, load, clk, reset, q);
 	input [19:0] load;
 	output reg [19:0] q;
 
-	initial q = load;
-
 	always @(posedge clk)
 	begin
-		if (reset)
+		if (!reset)
 			q <= load;
 		else if (enable)
 			begin

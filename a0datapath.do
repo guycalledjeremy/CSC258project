@@ -27,10 +27,10 @@ run 20 ns
 # Notice that y should be random and stays the same
 force {clk}  0 0 ns, 1 10 ns -r 20 ns
 force {resetn} 1
-force {plot} 0
+force {plot} 1
 force {do_e} 1 0 ns, 0 20 ns -r 40 ns
 force {do_d} 0 0 ns, 1 20 ns -r 40 ns
-run 4000 ns
+run 6500 ns
 
 # Try reset
 force {clk}  0 0 ns, 1 10 ns
