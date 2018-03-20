@@ -135,8 +135,8 @@ module control(c_q, go,reset_n,clock,enable,plot,next_p);
 		always@(*)
         begin: enable_signals
         // By default make all our signals 0
-        next = 1'b0;
-		enable = 1'b0;
+          next = 1'b0;
+		  enable = 1'b0;
 
 		  case(current_state)
 				S_READ_FILE:begin
