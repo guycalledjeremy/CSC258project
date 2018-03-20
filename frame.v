@@ -109,7 +109,7 @@ module datapath(clock, reset_n, enable1, erase, next_p, x, y, colour, x_v, y_v, 
         wire [7:0] xv;
         wire [5:0] xv;
         wire [2:0] cv;
-        getlocation g0(clock, reset_n, x, y, x_v, y_v, c_v);
+        getlocation g0(enable1, clock, reset_n, x, y, x_v, y_v, c_v);
 
         assign x_v = xv;
         assign y_v = yv;
@@ -118,8 +118,8 @@ module datapath(clock, reset_n, enable1, erase, next_p, x, y, colour, x_v, y_v, 
 endmodule
 // end Datapath module
 
-module getlocation(clock, resetn, x, y, x_v, y_v, c_v);
-    input clock, resetn;
+module getlocation(enable, clock, resetn, x, y, x_v, y_v, c_v);
+    input enable, clock, resetn;
     input [7:0] x;
     input [5:0] y;
 	reg [2:0] x_i;
@@ -131,28 +131,30 @@ module getlocation(clock, resetn, x, y, x_v, y_v, c_v);
     assign c_v = 3'b111;
 
     always (posedge clock) begin
-        if (!resetn) begin
-            x_v <= x;
-            y_v <= y;
-        end
-        else begin
-            if (y_i == 6'd4) begin
-				y_i <= 3'd0;
-                y_v <= y;
-            end
-            else begin
-                if (x_i == 8'd4) begin
-					x_i <= 3'd0;
-                    x_v <= x;
-					y_i <= y_i + 1;
-                    y_v <= y_v + y_i;
-                end
-                else begin
-					x_i <= x_i + 1;
-                    x_v <= x + x_i;
-                end
-            end
-        end
+		if (enable) begin
+	        if (!resetn) begin
+	            x_v <= x;
+	            y_v <= y;
+	        end
+	        else begin
+	            if (y_i == 6'd4) begin
+					y_i <= 3'd0;
+	                y_v <= y;
+	            end
+	            else begin
+	                if (x_i == 8'd4) begin
+						x_i <= 3'd0;
+	                    x_v <= x;
+						y_i <= y_i + 1;
+	                    y_v <= y_v + y_i;
+	                end
+	                else begin
+						x_i <= x_i + 1;
+	                    x_v <= x + x_i;
+	                end
+	            end
+	        end
+		end
     end
 
 endmodule
@@ -184,13 +186,16 @@ module control(read, go_s,reset_n,clock,enable,plot,next_p);
         // By default make all our signals 0
           next = 1'b0;
 		  enable = 1'b0;
+		  plot = 1'b0;
 
 		  case(current_state)
 				S_READ_FILE:begin
                     // Send signal to datapath to start reading from RAM
+					plot = 1'b1;
 					end
 				S_CYCLE:begin
                     enable = 1'b1;
+					plot = 1'b1;
                     next = 1'b1;
 					end
                 S_END_DRAW:begin
