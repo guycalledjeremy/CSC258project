@@ -122,6 +122,8 @@ module getlocation(clock, resetn, x, y, x_v, y_v, c_v);
     input clock, resetn;
     input [7:0] x;
     input [5:0] y;
+	reg [2:0] x_i;
+	reg [2:0] y_i;
     output reg [7:0]  x_v;
     output reg [5:0] y_v;
     output reg [2:0] c_v;
@@ -134,16 +136,20 @@ module getlocation(clock, resetn, x, y, x_v, y_v, c_v);
             y_v <= y;
         end
         else begin
-            if (y_v == 6'd4) begin
+            if (y_i == 6'd4) begin
+				y_i <= 3'd0;
                 y_v <= y;
             end
             else begin
-                if (x_v == 8'd4) begin
-                    y_v <= y_v + 1;
+                if (x_i == 8'd4) begin
+					x_i <= 3'd0;
                     x_v <= x;
+					y_i <= y_i + 1;
+                    y_v <= y_v + y_i;
                 end
                 else begin
-                    x_v <= x + 1;
+					x_i <= x_i + 1;
+                    x_v <= x + x_i;
                 end
             end
         end
