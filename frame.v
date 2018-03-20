@@ -191,7 +191,6 @@ module control(read, go_s,reset_n,clock,enable,plot,next_p);
 		  case(current_state)
 				S_READ_FILE:begin
                     // Send signal to datapath to start reading from RAM
-					plot = 1'b1;
 					end
 				S_CYCLE:begin
                     enable = 1'b1;
@@ -200,6 +199,7 @@ module control(read, go_s,reset_n,clock,enable,plot,next_p);
 					end
                 S_END_DRAW:begin
                     // Maybe do nothing?
+					plot = 1'b1;
                     end
 		  endcase
 		end
