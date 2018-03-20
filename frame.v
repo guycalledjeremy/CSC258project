@@ -22,7 +22,7 @@ module frame	(
     input           go;
     input           erase;
 	input	[7:0]	x;
-	input	[6:0] 	y;
+	input	[5:0] 	y;
 	// Declare your inputs and outputs here
 	// Do not change the following outputs
 	output			VGA_CLK;   				//	VGA Clock
@@ -38,7 +38,7 @@ module frame	(
     wire reset = resetn;
 	wire writeEn;
     wire [7:0]     x_v;
-    wire [6:0]     y_v;
+    wire [5:0]     y_v;
     wire [2:0]     c_v;
 
 
@@ -72,32 +72,33 @@ module frame	(
 	// for the VGA controller, in addition to any other functionality your design may require.
     wire next;
 	wire enable;
-	wire [3:0]     cq;
+    wire read_w, go_sw;
 
     // Instansiate datapath
 	// datapath d0(...);
-      datapath d0(CLOCK_50,reset,enable,erase,next, x, y, c_v, x_v, y_v, cq);
+      datapath d0(CLOCK_50,reset,enable,erase,next, x, y, c_v, x_v, y_v, read_w, go_sw);
 
     // Instansiate FSM control
     // control c0(...);
-	  control c0(cq,go,rest,CLOCK_50,enable,writeEn,next);
+	  control c0(read_w,go_sw,reset,CLOCK_50,enable,writeEn,next);
 endmodule
 // end main module
 
 
 // Datapath module
-module datapath(clock, reset_n, enable1, erase, next_p, x, y, colour, x_v, y_v, c_q);
+module datapath(clock, reset_n, enable1, erase, next_p, x, y, colour, x_v, y_v, read, go_s);
     	input 			    reset_n, enable1, clock;
         input               erase;
         input               next_p;
 		// The location of the image
 		input   [7:0]   x;
-		input   [6:0]   y;
+		input   [5:0]   y;
 		// The location of each pixel
         output  [7:0]   x_v;
-        output  [6:0]   y_v;
+        output  [5:0]   y_v;
         output  [2:0]   colour;
-    	output  [3:0]   c_q;
+        output read = 1'b1;
+        output go_s = 1'b1;
 
         // The datapath should be instansiating a RAM file, reading data about the
         // next pixel from it.
@@ -105,15 +106,55 @@ module datapath(clock, reset_n, enable1, erase, next_p, x, y, colour, x_v, y_v, 
         // if (erase) begin
         //     c_v <- 3'b111;
         // end
+        wire [7:0] xv;
+        wire [5:0] xv;
+        wire [2:0] cv;
+        getlocation g0(clock, reset_n, x, y, x_v, y_v, c_v);
+
+        assign x_v = xv;
+        assign y_v = yv;
+        assign colour = cv;
 
 endmodule
 // end Datapath module
 
+module getlocation(clock, resetn, x, y, x_v, y_v, c_v);
+    input clock, resetn;
+    input [7:0] x;
+    input [5:0] y;
+    output reg [7:0]  x_v;
+    output reg [5:0] y_v;
+    output reg [2:0] c_v;
+
+    assign c_v = 3'b111;
+
+    always (posedge clock) begin
+        if (!resetn) begin
+            x_v <= x;
+            y_v <= y;
+        end
+        else begin
+            if (y_v == 6'd4) begin
+                y_v <= y;
+            end
+            else begin
+                if (x_v == 8'd4) begin
+                    y_v <= y_v + 1;
+                    x_v <= x;
+                end
+                else begin
+                    x_v <= x + 1;
+                end
+            end
+        end
+    end
+
+endmodule
+
 
 // Control module
-module control(c_q, go,reset_n,clock,enable,plot,next_p);
-        input [3:0] c_q;
-		input go,reset_n,clock;
+module control(read, go_s,reset_n,clock,enable,plot,next_p);
+		input read,go_s,reset_n,clock;
 		output reg enable,plot,next_p;
 
 		reg [3:0] current_state, next_state;
