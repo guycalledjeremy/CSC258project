@@ -9,41 +9,23 @@ module topramsprite(clk, addr_read, out);
 	wire wren;
 	wire [15:0] value;
 	reg [9:0] address;
-	wire [9:0] addr_write;
+	reg [9:0] addr_write;
 	
-	ramsprite snowman(address, clk, value, wren, out);
 //	readSnowman snow0(clk, addr_write, value, wren);
-	RAM_IN snow0(value, address);
+	RAM_IN snow0(out, addr_write, wren);
 	
 	initial begin
-		
+		addr_write <= 10'b0;
 	end
 	
 	always @(posedge clk) begin
 		if (wren == 1'b1) begin
-		
+			addr_write <= addr_write + 1;
 			address <= addr_write;
 		end
 		else if (wren == 1'b0) begin
 			address <= addr_read;
 		end
-	end
-	
-	
-	reg [0:5] indx; 
-	wire [2:0] pix_val;
-
-	RAM_IN ram_in(pix_val, indx);
-
-	initial
-	begin
-	indx = 'b0;
-	$monitor ($realtime, " Read Data = %0b" ,pix_val);
-	begin
-		#10;
-		indx = indx + 1'd1;
-	end
-	$finish;
 	end
 
 endmodule
@@ -108,17 +90,19 @@ endmodule
 //
 //endmodule
 
-module RAM_IN (pix_val, indx);
+module RAM_IN (pix_val, indx, wren);
 
 input [9:0] indx;
-output [2:0] pix_val;
+output [15:0] pix_val;
+output reg wren;
 
-reg [2:0] pix_val;
-reg [2:0] in_ram [0:4];
+reg [15:0] pix_val;
+reg [2:0] in_ram [799:0];
 
-always @ (indx)
+always @ (indx) begin
   pix_val = in_ram [indx];
-  
+  wren = pix_val[0];
+end
 
 initial
 begin
