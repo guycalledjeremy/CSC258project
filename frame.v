@@ -144,19 +144,22 @@ module datapath(clock, reset_n, enable1, erase, next_p, x, y, colour, x_v, y_v, 
 				e <= 1'b1;		
 			end
 		    if (e) begin
+			colour <= 3'd0;
+		    end
+		    else begin
 			colour <= 3'b111;
 		    end
-	            if (y_i == 3'd5) begin
-					y_i <= 3'd0;
-	                y_v <= y;
-					go_s <= 1'b1;	
-	            end
 	            else begin
 	                if (x_i == 3'd4) begin
 						x_i <= 3'd0;
 	                    x_v <= x;
 						y_i <= y_i + 1;
 	                    y_v <= y + y_i + 1;
+	            if (y_i == 3'd5) begin
+					y_i <= 3'd0;
+	                y_v <= y;
+					go_s <= 1'b1;	
+	            end
 	                end
 	                else begin
 						x_i <= x_i + 1;
