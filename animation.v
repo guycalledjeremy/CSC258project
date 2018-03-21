@@ -30,7 +30,7 @@ module animation(
       output	    [9:0]	VGA_B;   		//	VGA Blue[9:0]
 
       wire reset, go;
-      assign reset = KEY[0];
+      assign reset = ~KEY[0];
       assign go = KEY[1];
 
       wire [7:0] x;
@@ -43,12 +43,12 @@ module animation(
       frame	f0(
         .CLOCK_50(CLOCK_50),						//	On Board 50 MHz
         // Your inputs and outputs here
-        .reset(reset),
+        .resetn(reset),
         .go(go),
         .erase(erase_e),
         // Where this image is to be drawn
-        .x_v(x),
-        .y_v(y),
+        .x(x),
+        .y(y),
         // The ports below are for the VGA output.  Do not change.
         .VGA_CLK(VGA_CLK),   						//	VGA Clock
         .VGA_HS(VGA_HS),							//	VGA H_SYNC
@@ -63,13 +63,13 @@ module animation(
     // dictate if we finished the drawing process.
     wire d, doe, dod;
 
-    datapath d0(CLOCK_50, reset, go, doe, dod, x, y_value, erase_e, d);
+    datapath2 d0(CLOCK_50, reset, go, doe, dod, x, y_value, erase_e, d);
 
-    control c0(CLOCK_50, reset, d, doe, dod);
+    control2 c0(CLOCK_50, reset, d, doe, dod);
 
 endmodule
 
-module datapath(clk, resetn, plot, do_e, do_d, x_v, y_v, erase, d);
+module datapath2(clk, resetn, plot, do_e, do_d, x_v, y_v, erase, d);
     input clk, resetn, plot;
     input do_e, do_d;
     output [7:0] x_v;
@@ -97,7 +97,7 @@ module datapath(clk, resetn, plot, do_e, do_d, x_v, y_v, erase, d);
     always @(posedge clk) begin
         // Reset block
         if (!resetn) begin
-            x <= 8'd160;
+            x <= 8'd60;
 	    d <= 1'b0;
 	    erase <= 1'b0;
         end
@@ -173,7 +173,7 @@ module LFSR (clk, reset, enable, out);
 endmodule
 
 
-module control(clock, reset_n, d, do_e, do_d);
+module control2(clock, reset_n, d, do_e, do_d);
     input clock, reset_n, d;
     output reg do_e, do_d;
 

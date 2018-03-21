@@ -18,9 +18,9 @@ module frame	(
 	);
 
 	input		    CLOCK_50;				//	50 MHz
-    // input           resetn;
-    // input           go;
-    // input           erase;
+   input           resetn;
+   input           go;
+   input           erase;
 	input	[7:0]	x;
 	input	[5:0] 	y;
 	// Declare your inputs and outputs here
@@ -33,9 +33,6 @@ module frame	(
 	output	    [9:0]	VGA_R;   			//	VGA Red[9:0]
 	output	    [9:0]	VGA_G;	 			//	VGA Green[9:0]
 	output	    [9:0]	VGA_B;   			//	VGA Blue[9:0]
-
-	reg [7:0] x;
-	reg [5:0] y;
 
 	// Create the writeEn wires that are inputs to the controller.
     wire reset = resetn;
@@ -120,10 +117,12 @@ module datapath(clock, reset_n, enable1, erase, next_p, x, y, colour, x_v, y_v, 
 		wire [2:0] cv;
 		wire [15:0] out;
 		wire [9:0] addr_read;
+		wire writen;
+		assign writen = {enable1 | nextp};
 
 		topramsprite snow(clock, addr_read, out);
 		drawsnowman d0(clock, addr_read);
-		translateout t0(clock, out, x, y, xv, yv, cv, {enable1 | nextp});
+		translateout t0(clock, out, x, y, xv, yv, cv, writen);
 
 	    always @(posedge clock) begin
 		if (enable1) begin
