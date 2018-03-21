@@ -163,6 +163,11 @@ module datapath(clock, reset_n, enable1, erase, next_p, x, y, colour, x_v, y_v, 
 	                else begin
 						x_i <= x_i + 1;
 	                    x_v <= x + x_i + 1;
+				if (y_i == 3'd5) begin
+					y_i <= 3'd0;
+	                y_v <= y;
+					go_s <= 1'b1;	
+	            end
 	                end
 	        end
 		end
