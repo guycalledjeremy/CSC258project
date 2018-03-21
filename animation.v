@@ -1,7 +1,8 @@
 module animation(
         CLOCK_50,
-        reset,
-        go,
+        // reset,
+        // go,
+        KEY,
         // The ports below are for the VGA output.  Do not change.
   		VGA_CLK,   						//	VGA Clock
   		VGA_HS,							//	VGA H_SYNC
@@ -14,8 +15,9 @@ module animation(
   );
 
       input CLOCK_50;
-      input reset;
-      input go;
+      // input reset;
+      // input go;
+      input [3:0] KEY;
       // Declare your inputs and outputs here
       // Do not change the following outputs
       output		VGA_CLK;   				//	VGA Clock
@@ -26,6 +28,10 @@ module animation(
       output	    [9:0]	VGA_R;   		//	VGA Red[9:0]
       output	    [9:0]	VGA_G;	 		//	VGA Green[9:0]
       output	    [9:0]	VGA_B;   		//	VGA Blue[9:0]
+
+      wire reset, go;
+      assign reset = KEY[0];
+      assign go = KEY[1];
 
       wire [7:0] x;
       wire [5:0] y_value;
