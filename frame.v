@@ -158,6 +158,7 @@ module datapath(clock, reset_n, enable1, erase, next_p, x, y, colour, x_v, y_v, 
 					y_i <= 3'd0;
 	                y_v <= y;
 					go_s <= 1'b1;	
+					e <= 1'b0;
 	            end
 	                end
 	                else begin
@@ -228,7 +229,7 @@ module control(read, go_s,reset_n,clock,erase,enable,plot,next_p);
 					end
                 S_END_DRAW:begin
                     // Maybe do nothing?
-					plot = 1'b1;
+					//plot = 1'b1;
                     end
 		  endcase
 		end
