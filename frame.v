@@ -1,13 +1,11 @@
 module frame	(
 		CLOCK_50,						   //	On Board 50 MHz
 		// My inputs and outputs here
-        //resetn,
-        //go,
-        //erase,
-        SW,
-        KEY,
-		// x,
-		// y,
+        resetn,
+        go,
+        erase,
+		x,
+		y,
 		// The ports below are for the VGA output.  Do not change.
 		VGA_CLK,   						   //	VGA Clock
 		VGA_HS,							   //	VGA H_SYNC
@@ -23,8 +21,8 @@ module frame	(
     // input           resetn;
     // input           go;
     // input           erase;
-	input	[7:0]	SW;
-	input	[3:0] 	KEY;
+	input	[7:0]	x;
+	input	[5:0] 	y;
 	// Declare your inputs and outputs here
 	// Do not change the following outputs
 	output			VGA_CLK;   				//	VGA Clock
@@ -38,20 +36,6 @@ module frame	(
 
 	reg [7:0] x;
 	reg [5:0] y;
-
-	wire go;
-	wire erase;
-	wire resetn;
-	assign resetn = KEY[3];
-	assign go = !KEY[1];
-	assign erase = !KEY[2];
-
-	always @(posedge CLOCK_50) begin
-		if (!KEY[0]) begin
-			x <= SW[7:0];
-			y <= SW[5:0];
-		end
-	end
 
 	// Create the writeEn wires that are inputs to the controller.
     wire reset = resetn;
@@ -129,6 +113,17 @@ module datapath(clock, reset_n, enable1, erase, next_p, x, y, colour, x_v, y_v, 
 
 		reg [2:0] x_i;
 		reg [2:0] y_i;
+		reg nextp;
+
+		wire [7:0] xv;
+		wire [5:0] yv;
+		wire [2:0] cv;
+		wire [15:0] out;
+		wire [9:0] addr_read;
+
+		topramsprite snow(clock, addr_read, out);
+		drawsnowman d0(clock, addr_read);
+		translateout t0(clock, out, x, y, xv, yv, cv, {enable1 | nextp});
 
 	    always @(posedge clock) begin
 		if (enable1) begin
@@ -140,33 +135,38 @@ module datapath(clock, reset_n, enable1, erase, next_p, x, y, colour, x_v, y_v, 
 				go_s <= 1'b0;
 				colour <= 3'd0;
 				e <= 1'b0;
+				nextp <= 1'b0;
 	        end
 	        else begin
 			    if (e) begin
 					colour <= 3'd0;
 			    end
 			    else begin
-					colour <= 3'b111;
+					colour <= cv;
 			    end
 				if (erase) begin
 					e <= 1'b1;
 					colour <= 3'd0;
 				end
-                if (x_i == 3'd4) begin
-					x_i <= 3'd0;
+				if (next_p) begin
+					nextp <= 1'b1;
+				end
+                if (x_i == 5'd20) begin
+					x_i <= 5'd0;
                     x_v <= x;
 					y_i <= y_i + 1;
-                    y_v <= y + y_i + 1;
-		            if (y_i == 3'd5) begin
-						y_i <= 3'd0;
+                    y_v <= y_v;
+		            if (y_i == 6'd41) begin
+						y_i <= 6'd0;
 		                y_v <= y;
 						go_s <= 1'b1;
 						e <= 1'b0;
+						nextp <= 1'b0;
 		            end
                 end
                 else begin
 					x_i <= x_i + 1;
-                    x_v <= x + x_i + 1;
+                    x_v <= xv;
                 end
 	        end
 		end
@@ -178,19 +178,48 @@ module datapath(clock, reset_n, enable1, erase, next_p, x, y, colour, x_v, y_v, 
 endmodule
 // end Datapath module
 
-//module getlocation(enable, clock, resetn, x, y, x_v, y_v, c_v);
- //   input enable, clock, resetn;
- //   input [7:0] x;
- //   input [5:0] y;
-    //output reg [7:0]  x_v;
- //   output reg [5:0] y_v;
-//    output [2:0] c_v;
 
-//    assign c_v = 3'b111;
+module drawsnowman(clock, addr_read);
+	input clock;
+	output reg [9:0] addr_read;
+	initial addr_read = 10'b0;
+	always @ (posedge clock) begin
+		if (addr_read < 10'd800) begin
+			addr_read <= addr_read + 1'b1;
+		end
+		else begin
+			addr_read <= 10'b0;
+		end
+	end
+endmodule
 
+module translateout(clock, out, coord_x, coord_y, x, y, colour, writeEn);
+	input clock;
+	input [15:0] out;
+	input [7:0] coord_x;
+	input [6:0] coord_y;
+	output reg [7:0] x;
+	output reg [6:0] y;
+	output reg writeEn;
+	output reg [2:0] colour;
+	wire [5:0] x_rel;
+	wire [5:0] y_rel;
+	wire [2:0] col;
+	wire wren;
 
+	assign x_rel = out[15:10];
+	assign y_rel = out[9:4];
+	assign col = out[3:1];
+	assign wren = out[0];
 
-//endmodule
+	always @ (posedge clock) begin
+		x <= coord_x + x_rel;
+		y <= coord_y + y_rel;
+		colour <= col;
+		writeEn <= wren;
+	end
+
+endmodule
 
 
 // Control module
