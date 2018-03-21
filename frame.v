@@ -6,6 +6,8 @@ module frame	(
         //erase,
         SW,
         KEY,
+		// x,
+		// y,
 		// The ports below are for the VGA output.  Do not change.
 		VGA_CLK,   						   //	VGA Clock
 		VGA_HS,							   //	VGA H_SYNC
@@ -119,53 +121,53 @@ module datapath(clock, reset_n, enable1, erase, next_p, x, y, colour, x_v, y_v, 
         // The datapath should be instansiating a RAM file, reading data about the
         // next pixel from it.
 
-	reg e;
+		reg e;
         // wire [7:0] xv;
         // wire [5:0] xv;
         // wire [2:0] cv;
         // getlocation g0(enable1, clock, reset_n, x, y, x_v, y_v, c_v);
 
-	reg [2:0] x_i;
-	reg [2:0] y_i;
+		reg [2:0] x_i;
+		reg [2:0] y_i;
 
 	    always @(posedge clock) begin
-	if (enable1) begin
+		if (enable1) begin
 	        if (!reset_n) begin
-						x_i <= 3'd0;
-					y_i <= 3'd0;
+				x_i <= 3'd0;
+				y_i <= 3'd0;
 	            x_v <= x;
 	            y_v <= y;
-		go_s <= 1'b0;
-		colour <= 3'd0;
-		e <= 1'b0;
+				go_s <= 1'b0;
+				colour <= 3'd0;
+				e <= 1'b0;
 	        end
 	        else begin
-			if (erase) begin
-				e <= 1'b1;	
-			colour <= 3'd0;	
-			end
-		    if (e) begin
-			colour <= 3'd0;
-		    end
-		    else begin
-			colour <= 3'b111;
-		    end
-	                if (x_i == 3'd4) begin
-						x_i <= 3'd0;
-	                    x_v <= x;
-						y_i <= y_i + 1;
-	                    y_v <= y + y_i + 1;
-	            if (y_i == 3'd5) begin
-					y_i <= 3'd0;
-	                y_v <= y;
-					go_s <= 1'b1;
-					e <= 1'b0;	
-	            end
-	                end
-	                else begin
-						x_i <= x_i + 1;
-	                    x_v <= x + x_i + 1;
-	                end
+			    if (e) begin
+					colour <= 3'd0;
+			    end
+			    else begin
+					colour <= 3'b111;
+			    end
+				if (erase) begin
+					e <= 1'b1;
+					colour <= 3'd0;
+				end
+                if (x_i == 3'd4) begin
+					x_i <= 3'd0;
+                    x_v <= x;
+					y_i <= y_i + 1;
+                    y_v <= y + y_i + 1;
+		            if (y_i == 3'd5) begin
+						y_i <= 3'd0;
+		                y_v <= y;
+						go_s <= 1'b1;
+						e <= 1'b0;
+		            end
+                end
+                else begin
+					x_i <= x_i + 1;
+                    x_v <= x + x_i + 1;
+                end
 	        end
 		end
     end
@@ -237,7 +239,7 @@ module control(read, go_s,reset_n,clock,erase,enable,plot,next_p);
 
 
 		always@(posedge clock)
-      begin: state_FFs
+      	begin: state_FFs
         if(!reset_n)
             current_state <= S_READ_FILE;
         else
@@ -245,4 +247,3 @@ module control(read, go_s,reset_n,clock,erase,enable,plot,next_p);
       end
 endmodule
 // end Control module
-
