@@ -31,7 +31,7 @@ module frame	(
 	wire go;
 	wire erase;
 	
-	assign resetn = ~KEY[0];
+	assign resetn = KEY[0];
 	assign go = KEY[1];
 	assign erase = ~KEY[2];
 	
