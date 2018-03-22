@@ -1,11 +1,13 @@
 module frame	(
 		CLOCK_50,						   //	On Board 50 MHz
 		// My inputs and outputs here
-        resetn,
-        go,
-        erase,
-		x,
-		y,
+      //  resetn,
+      //  go,
+      //  erase,
+		SW,
+		KEY,
+		//x,
+		//y,
 		// The ports below are for the VGA output.  Do not change.
 		VGA_CLK,   						   //	VGA Clock
 		VGA_HS,							   //	VGA H_SYNC
@@ -18,11 +20,33 @@ module frame	(
 	);
 
 	input		    CLOCK_50;				//	50 MHz
-   input           resetn;
-   input           go;
-   input           erase;
-	input	[7:0]	x;
-	input	[5:0] 	y;
+   //input           resetn;
+   //input           go;
+   //input           erase;
+	
+	input [9:0] SW;
+	input [3:0] KEY;
+	
+	wire resetn;
+	wire go;
+	wire erase;
+	
+	assign resetn = ~KEY[0];
+	assign go = KEY[1];
+	assign erase = ~KEY[2];
+	
+	reg [7:0] x;
+	reg [5:0] y;
+	
+	always @(posedge CLOCK_50) begin 
+	if (KEY[3]) begin
+		x <= SW[7:0];
+		y <= SW[5:0];
+	end
+	end
+	
+	//input	[7:0]	x;
+	//input	[5:0] 	y;
 	// Declare your inputs and outputs here
 	// Do not change the following outputs
 	output			VGA_CLK;   				//	VGA Clock
@@ -142,6 +166,7 @@ module datapath(clock, reset_n, enable1, erase, next_p, x, y, colour, x_v, y_v, 
 			    end
 			    else begin
 					colour <= cv;
+					colour <= 3'b111;
 			    end
 				if (erase) begin
 					e <= 1'b1;
@@ -155,6 +180,7 @@ module datapath(clock, reset_n, enable1, erase, next_p, x, y, colour, x_v, y_v, 
                     x_v <= x;
 					y_i <= y_i + 1;
                     y_v <= y_v;
+						  //y_v <= y + y_i;
 		            if (y_i == 6'd41) begin
 						y_i <= 6'd0;
 		                y_v <= y;
@@ -166,17 +192,17 @@ module datapath(clock, reset_n, enable1, erase, next_p, x, y, colour, x_v, y_v, 
                 else begin
 					x_i <= x_i + 1;
                     x_v <= xv;
+						  //x_v <= x + x_i;
                 end
 	        end
 		end
     end
-        // assign x_v = xv;
-        // assign y_v = yv;
-        // assign colour = cv;
+         ///assign x_v = xv;
+         //assign y_v = yv;
+         //assign colour = cv;
 
 endmodule
 // end Datapath module
-
 
 module drawsnowman(clock, addr_read);
 	input clock;
@@ -219,7 +245,6 @@ module translateout(clock, out, coord_x, coord_y, x, y, colour, writeEn);
 	end
 
 endmodule
-
 
 // Control module
 module control(read, go_s,reset_n,clock,erase,enable,plot,next_p);
