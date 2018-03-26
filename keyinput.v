@@ -7,13 +7,14 @@ module keyinput(
     );
 
     // input clock, resetn;
-    input CLOCK_50, [3:0] KEY;
+    input CLOCK_50;
+	 input [3:0] KEY;
     input PS2_CLK;
     input PS2_DAT;
     // output restart;
     // output moveup;
     // output movedown;
-    output LEDR[0];
+    output [9:0] LEDR;
 
     // Delete these lines after test
     wire clock = CLOCK_50;
@@ -38,7 +39,7 @@ module keyinput(
     . keyboard_clk ( PS2_CLK ),
     . keyboard_data ( PS2_DAT ),
     . clock50 ( clock ),
-    . reset ( resetn ),
+    . reset ( ~resetn ),
     . read ( read ),
     . scan_ready ( scan_ready ),
     . scan_code ( scan_code ));
