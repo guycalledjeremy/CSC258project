@@ -12,7 +12,7 @@ module topramsprite(clk, addr_read, out);
 	reg [9:0] addr_write;
 	
 //	readSnowman snow0(clk, addr_write, value, wren);
-	RAM_IN snow0(out, addr_write, wren);
+	RAM_IN snow0(out, addr_read, wren);
 	
 	initial begin
 		addr_write <= 10'b0;
@@ -97,7 +97,7 @@ output [15:0] pix_val;
 output reg wren;
 
 reg [15:0] pix_val;
-reg [2:0] in_ram [799:0];
+reg [15:0] in_ram [799:0];
 
 always @ (indx) begin
   pix_val = in_ram [indx];

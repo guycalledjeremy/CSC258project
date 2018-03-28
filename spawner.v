@@ -65,27 +65,25 @@ module slowclk (clk, reset, enable, frequency, out);
 	input [1:0] frequency;
 	output reg out;
 	// this is the slower 'clock', will output 0 or 1
-	
-	initial out = 0;
 
 	wire [27:0] w1hz, w2hz, w3hz;
 
-//	ratedivider r1hz(enable, {2'b00, 26'd49999999}, clk, reset, w1hz);
-//	ratedivider r2hz(enable, {3'b000, 25'd24999999}, clk, reset, w2hz);
-//	ratedivider r3hz(enable, {4'b0000, 24'd16666666}, clk, reset, w3hz);
+	ratedivider r1hz(enable, {2'b00, 26'd49999999}, clk, reset, w1hz);
+	ratedivider r2hz(enable, {3'b000, 25'd24999999}, clk, reset, w2hz);
+	ratedivider r3hz(enable, {4'b0000, 24'd16666666}, clk, reset, w3hz);
 
 	// faster dividers for testing. Uncomment top and comment below for actual. 
-	ratedivider r1hz(enable, {26'b0, 2'b11}, clk, reset, w1hz);
-	ratedivider r2hz(enable, {26'b0, 2'b10}, clk, reset, w2hz);
-	ratedivider r3hz(enable, {26'b0, 2'b01}, clk, reset, w3hz);
+//	ratedivider r1hz(enable, {26'd0, 2'b11}, clk, reset, w1hz);
+//	ratedivider r2hz(enable, {26'd0, 2'b10}, clk, reset, w2hz);
+//	ratedivider r3hz(enable, {26'd0, 2'b01}, clk, reset, w3hz);
 	
 	always @(*)
 		begin
 			case(frequency)
-				2'b00: out = enable;
-				2'b01: out = (w1hz == 0) ? 1 : 0;
-				2'b10: out = (w2hz == 0) ? 1 : 0;
-				2'b11: out = (w3hz == 0) ? 1 : 0;
+				2'b00: out <= enable;
+				2'b01: out <= (w1hz == 28'd0) ? 1'b1 : 1'b0;
+				2'b10: out <= (w2hz == 28'd0) ? 1'b1 : 1'b0;
+				2'b11: out <= (w3hz == 28'd0) ? 1'b1 : 1'b0;
 			endcase
 		end
 		
@@ -141,7 +139,7 @@ module ratedivider(enable, load, clk, reset, q);
 			q <= load;
 		else if (enable)
 			begin
-				if (q == 0)
+				if (q == 28'd0)
 					q <= load;
 				else
 					q <= q - 1'b1;
