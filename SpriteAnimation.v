@@ -141,7 +141,7 @@ module drawsnowman(clock, addr_read);
 	output reg [9:0] addr_read;
 	initial addr_read = 10'b0;
 	always @ (posedge clock) begin
-		if (addr_read < 10'd800) begin
+		if (addr_read < 10'd840) begin
 			addr_read <= addr_read + 1'b1;
 		end
 		else begin
