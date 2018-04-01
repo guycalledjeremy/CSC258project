@@ -79,43 +79,9 @@ module SpriteAnimation
 	 
 		topramsprite snow(CLOCK_50, addr_read, out);
 		drawsnowman d0(CLOCK_50, addr_read);
-		translateout t0(CLOCK_50, out, x_coord, 7'b0010111, x, y, colour, writeEn_out);
+		translateout t0(CLOCK_50, out, x_coord, yout_reg, x, y, colour, writeEn_out);
 		
 		assign writeEn = ~KEY[2];
-		
-//		slowclk c1(CLOCK_50, ~resetn, 1'b1, 2'b01, onesecond);
-//		wire [27:0] q;
-//		ratedivider(~KEY[1], {2'b00, 26'd49999999}, CLOCK_50, ~resetn, q);
-
-//		assign LEDR[1] = ~onesecond;
-//		assign LEDR[0] = onesecond;
-//		
-//		reg a1;
-//		assign LEDR[2] = a1;
-//		
-//		always @(posedge onesecond) begin
-//			if (a1) begin
-//				a1 <= 1'b0;
-//			end
-//			else begin
-//				a1<= 1'b1;
-//			end
-//		end
-
-
-//		reg [7:0] a_reg;
-//		wire [7:0] a = a_reg;
-//		
-//		always @(onesecond) begin
-//			if (a == 8'b00010111) begin
-//				a_reg <= 8'b00101110;
-//			end
-//			else begin
-//				a_reg <= 8'b00010111;
-//			end
-//		end
-		
-		//assign LEDR[0] = onesecond;
 		
 	// Try shifting the snowman left automatically
 //		
@@ -132,6 +98,22 @@ module SpriteAnimation
 		assign LEDR [3] = x_coord[3];
 		assign LEDR [4] = x_coord[4];
 
+		
+		// try spawning
+		
+		// Block starts
+  // The random generation for y.
+  wire spawn;
+  wire [9:0] yout;
+  reg [6:0] yout_reg;
+  LFSR random0(CLOCK_50, ~resetn, 1'b1, spawn, yout);
+  
+  always @(posedge CLOCK_50) begin
+   if (~KEY[3]) begin
+    yout_reg <= yout[5:0] + yout[3:0];
+   end
+  end
+  // Block ends
 
     
 endmodule
@@ -188,7 +170,7 @@ module coordshifter(clock, reset, snowx_coord, snowy_coord);
 //	initial snowy_coord = 7'b0010111;
 		
 	always @ (posedge clock, negedge reset) begin
-		if (!reset) begin
+		if (!reset   ) begin
 			snowx_coord <= 8'b00001011;
 			snowy_coord <= 7'b0010111;
 		end
