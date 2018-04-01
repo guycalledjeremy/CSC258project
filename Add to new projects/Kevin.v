@@ -1,5 +1,5 @@
 // can directly put the BlackSnowman into the toplevel
-module BlackSnowman(clock, x_coord, y_coord, x, y, colour, writeEn);
+module Kevin(clock, x_coord, y_coord, x, y, colour, writeEn);
 	input clock;
 	input [7:0] x_coord;
 	input [6:0] y_coord;
@@ -11,13 +11,13 @@ module BlackSnowman(clock, x_coord, y_coord, x, y, colour, writeEn);
 	wire [9:0] addr_read;
 	wire [15:0] out;
 
-	BSnowman_topramsprite snow(clock, addr_read, out);
-	drawsnowman d0(clock, addr_read);
+	Kevin_topramsprite kev(clock, addr_read, out);
+	drawKevin d0(clock, addr_read);
 	translateout t0(clock, out, x_coord, y_coord, x, y, colour, writeEn_out);
 
 endmodule
 
-module BSnowman_topramsprite(clk, addr_read, out);
+module Kevin_topramsprite(clk, addr_read, out);
 
 	input clk; //should be CLOCK_50
 	input [9:0] addr_read;
@@ -28,7 +28,7 @@ module BSnowman_topramsprite(clk, addr_read, out);
 	reg [9:0] address;
 	reg [9:0] addr_write;
 	
-	BSnowman_RAM_IN snow0(out, addr_read, wren);
+	Kevin_RAM_IN snow0(out, addr_read, wren);
 	
 	initial begin
 		addr_write <= 10'b0;
@@ -46,14 +46,14 @@ module BSnowman_topramsprite(clk, addr_read, out);
 
 endmodule
 
-module BSnowman_RAM_IN (pix_val, indx, wren);
+module Kevin_RAM_IN (pix_val, indx, wren);
 
 input [9:0] indx;
 output [15:0] pix_val;
 output reg wren;
 
 reg [15:0] pix_val;
-reg [15:0] in_ram [839:0];
+reg [15:0] in_ram [219:0];
 
 always @ (indx) begin
   pix_val = in_ram [indx];
@@ -62,7 +62,21 @@ end
 
 initial
 begin
-  $readmemb("BlackSnowman.txt", in_ram);
+  $readmemb("Kevin.txt", in_ram);
 end
 
+endmodule
+
+module drawKevin(clock, addr_read);
+	input clock;
+	output reg [9:0] addr_read;
+	initial addr_read = 10'b0;
+	always @ (posedge clock) begin
+		if (addr_read < 10'd220) begin
+			addr_read <= addr_read + 1'b1;
+		end
+		else begin
+			addr_read <= 10'b0;
+		end
+	end
 endmodule

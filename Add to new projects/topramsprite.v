@@ -11,7 +11,6 @@ module topramsprite(clk, addr_read, out);
 	reg [9:0] address;
 	reg [9:0] addr_write;
 	
-//	readSnowman snow0(clk, addr_write, value, wren);
 	RAM_IN snow0(out, addr_read, wren);
 	
 	initial begin
