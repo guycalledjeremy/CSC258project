@@ -5,7 +5,6 @@ module SpriteAnimation
 		CLOCK_50,						//	On Board 50 MHz
 		// Your inputs and outputs here
         KEY,
-        SW,
 		  LEDR,
 		// The ports below are for the VGA output.  Do not change.
 		VGA_CLK,   						//	VGA Clock
@@ -19,7 +18,6 @@ module SpriteAnimation
 	);
 
 	input			CLOCK_50;				//	50 MHz
-	input   [9:0]   SW;
 	input   [3:0]   KEY;
 	output [9:0] LEDR;
 
@@ -44,8 +42,8 @@ module SpriteAnimation
 	wire [6:0] y;
 	wire writeEn;
 	wire enable,ld_x,ld_y,ld_c;
-	wire [15:0] out;
-	wire [9:0] addr_read;
+//	wire [15:0] out;
+//	wire [9:0] addr_read;
 
 	// Create an Instance of a VGA controller - there can be only one!
 	// Define the number of colours as well as the initial background
@@ -77,44 +75,48 @@ module SpriteAnimation
 	// for the VGA controller, in addition to any other functionality your design may require.
 //    	assign x_coord = SW[7:0];
 	 
-		topramsprite snow(CLOCK_50, addr_read, out);
-		drawsnowman d0(CLOCK_50, addr_read);
-		translateout t0(CLOCK_50, out, x_coord, yout_reg, x, y, colour, writeEn_out);
+//		topramsprite snow(CLOCK_50, addr_read, out);
+//		drawsnowman d0(CLOCK_50, addr_read);
+//		translateout t0(CLOCK_50, out, x_coord, yout_reg, x, y, colour, writeEn_out);
 		
-		assign writeEn = ~KEY[2];
+		assign writeEn = ~KEY[1];
 		
 	// Try shifting the snowman left automatically
 //		
-		wire [7:0] x_coord;
-		wire [6:0] y_coord;
-		wire onesecond;
+//		wire [7:0] x_coord;
+//		wire [6:0] y_coord;
+//		wire onesecond;
+//		
+//		slowclk c1(CLOCK_50, ~KEY[0], 1'b1, 2'b11, onesecond);
+//		coordshifter cs0(onesecond, resetn, 1'b1, x_coord, y_coord);
 		
-		slowclk c1(CLOCK_50, ~KEY[0], 1'b1, 2'b11, onesecond);
-		coordshifter cs0(onesecond, resetn, ~KEY[3], x_coord, y_coord);
-		
-		assign LEDR [0] = x_coord[0];
-		assign LEDR [1] = x_coord[1];
-		assign LEDR [2] = x_coord[2];
-		assign LEDR [3] = x_coord[3];
-		assign LEDR [4] = x_coord[4];
+//		assign LEDR [0] = x_coord[0];
+//		assign LEDR [1] = x_coord[1];
+//		assign LEDR [2] = x_coord[2];
+//		assign LEDR [3] = x_coord[3];
+//		assign LEDR [4] = x_coord[4];
 
 		
 		// try spawning
 		
 		// Block starts
   // The random generation for y.
-  wire spawn;
-  wire [9:0] yout;
-  reg [6:0] yout_reg;
-  LFSR random0(CLOCK_50, ~resetn, 1'b1, spawn, yout);
-  
-  always @(posedge CLOCK_50) begin
-   if (~KEY[3]) begin
-    yout_reg <= yout[5:0] + yout[3:0];
-   end
-  end
+//  wire spawn;
+//  wire [9:0] yout;
+//  reg [6:0] yout_reg;
+//  LFSR random0(CLOCK_50, ~resetn, 1'b1, spawn, yout);
+//  
+//  always @(posedge CLOCK_50) begin
+//   if (x_coord == 8'b0) begin
+//    yout_reg <= yout[5:0] + yout[3:0];
+//   end
+//  end
   // Block ends
-    
+   wire wren_out;
+//	datapath d0(CLOCK_50, resetn, KEY[2], x, y, colour, wren_out);
+
+	datapath d0(CLOCK_50, resetn, x, y, colour, wren_out);
+	
 endmodule
 
 module drawsnowman(clock, addr_read);
@@ -173,7 +175,7 @@ module coordshifter(clock, reset, go_back, snowx_coord, snowy_coord);
 	output reg [6:0] snowy_coord;
 //	initial snowy_coord = 7'b0010111;
 		
-	always @ (posedge clock) begin
+	always @ (posedge clock, negedge reset) begin
 		if (!reset   ) begin
 			snowx_coord <= 8'd138;
 			snowy_coord <= 7'b0010111;
@@ -192,4 +194,149 @@ module coordshifter(clock, reset, go_back, snowx_coord, snowy_coord);
 			end
 		end
 	end
+endmodule
+
+module datapath(clock, resetn, x_out, y_out, colour_out, wren_out);
+	input clock, resetn;
+	output reg [7:0] x_out;
+	output reg [6:0] y_out;
+	output reg [2:0] colour_out;
+	output reg wren_out;
+	
+	wire [7:0] x_k;
+	wire [6:0] y_k;
+	wire [2:0] colour_k;
+	wire writeEn_k;
+	
+	wire [15:0] out;
+	wire [9:0] addr_read;
+	
+	wire [7:0] x;
+	wire [6:0] y;
+	wire [2:0] colour;
+	wire writeEn_out;
+
+	Kevin k0(clock, 8'd5, 7'd50, x_k, y_k, colour_k, writeEn_k);
+	
+	topramsprite snow(clock, addr_read, out);
+	drawsnowman d0(clock, addr_read);
+	translateout t0(clock, out, x_coord, yout_reg, x, y, colour, writeEn_out);
+	
+	wire [7:0] x_coord;
+	wire [6:0] y_coord;
+	wire onesecond;
+		
+	slowclk c1(clock, ~resetn, 1'b1, 2'b11, onesecond);
+	coordshifter cs0(onesecond, resetn, 1'b1, x_coord, y_coord);
+	
+	wire spawn;
+   wire [9:0] yout;
+   reg [6:0] yout_reg;
+   LFSR random0(clock, ~resetn, 1'b1, spawn, yout);
+	
+	wire [1:0] sprite_num;
+	control(clock, resetn, sprite_num);
+  
+   always @(posedge clock) begin
+//		x_out <= sprite_num? x_k : x;
+//		y_out <= sprite_num? y_k : y;
+//		colour_out <= sprite_num? colour_k : colour;
+//		wren_out <= sprite_num? writeEn_k : writeEn_out;
+		if (x_coord == 8'b0) begin
+			yout_reg <= yout[5:0] + yout[3:0];
+		end
+   end
+	
+	always @(*) begin
+		x_out = 8'd0;
+		y_out = 7'd0;
+		colour_out = 3'd0;
+		wren_out = 1'b0;
+	
+		case (sprite_num)
+			2'b00: begin
+				x_out = 8'd0;
+				y_out = 7'd0;
+				colour_out = 3'd0;
+				wren_out = 1'b0;
+			end
+			2'b01: begin
+				x_out = x_k;
+				y_out = y_k;
+				colour_out = colour_k;
+				wren_out = writeEn_k;
+			end
+			2'b10: begin
+				x_out = x;
+				y_out = y;
+				colour_out = colour;
+				wren_out = writeEn_out;
+			end
+			default: begin
+				x_out = 8'd0;
+				y_out = 7'd0;
+				colour_out = 3'd0;
+				wren_out = 1'b0;
+			end
+		endcase
+	end
+	
+//		assign x_out = sprite_num? x_k : x;
+//		assign y_out = sprite_num? y_k : y;
+//		assign colour_out = sprite_num? colour_k : colour;
+//		assign wren_out = sprite_num? writeEn_k : writeEn_out;
+endmodule
+
+module control(clock, resetn, sprite_num);
+	input clock, resetn;
+	output reg [1:0] sprite_num;
+
+	wire sixtyHz;
+
+	slowclk slow0(clock, ~resetn, 1'b1, 2'b10, sixtyHz);
+	
+	reg [1:0] current_state, next_state;
+	
+	localparam CYCLE_WAIT = 2'b00,
+					CYCLE_KEV = 2'b01,
+					CYCLE_SNOWMAN = 2'b10;
+					
+	always@(*)
+      begin: state_table 
+            case (current_state)
+                CYCLE_WAIT: next_state = CYCLE_KEV; 
+                CYCLE_KEV: next_state = CYCLE_SNOWMAN;
+                CYCLE_SNOWMAN: next_state = CYCLE_WAIT;
+            default:     next_state = CYCLE_WAIT;
+        endcase
+      end 
+	
+	always @(*) begin
+		// reset all parameters
+		sprite_num <= 2'b00;
+	
+		case(current_state)
+			CYCLE_WAIT: begin
+				sprite_num <= 2'b00;
+			end
+			CYCLE_KEV: begin 
+				sprite_num <= 2'b01;
+			end
+			CYCLE_SNOWMAN: begin 
+				sprite_num <= 2'b10;
+			end
+			default: sprite_num <= 2'b00;
+		endcase
+	end
+	
+	always@(posedge sixtyHz)
+   begin: state_FFs
+		if(!resetn) begin 
+         current_state <= CYCLE_WAIT;
+		end
+      else begin 
+			current_state <= next_state;
+		end
+   end 
+	
 endmodule

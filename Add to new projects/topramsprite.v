@@ -11,7 +11,7 @@ module topramsprite(clk, addr_read, out);
 	reg [9:0] address;
 	reg [9:0] addr_write;
 	
-	RAM_IN snow0(out, addr_read, wren);
+	RAM_IN snow0(clk, out, addr_read, wren);
 	
 	initial begin
 		addr_write <= 10'b0;
@@ -29,8 +29,8 @@ module topramsprite(clk, addr_read, out);
 
 endmodule
 
-module RAM_IN (pix_val, indx, wren);
-
+module RAM_IN (clk, pix_val, indx, wren);
+input clk;
 input [9:0] indx;
 output [15:0] pix_val;
 output reg wren;
@@ -38,7 +38,7 @@ output reg wren;
 reg [15:0] pix_val;
 reg [15:0] in_ram [839:0];
 
-always @ (indx) begin
+always @ (posedge clk) begin
   pix_val = in_ram [indx];
   wren = pix_val[0];
 end

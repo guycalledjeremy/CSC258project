@@ -8,30 +8,30 @@ module Kevin(clock, x_coord, y_coord, x, y, colour, writeEn);
 	output [2:0] colour;
 	output writeEn;
 	
-	wire [9:0] addr_read;
+	wire [7:0] addr_read;
 	wire [15:0] out;
 
 	Kevin_topramsprite kev(clock, addr_read, out);
 	drawKevin d0(clock, addr_read);
-	translateout t0(clock, out, x_coord, y_coord, x, y, colour, writeEn_out);
+	translateout tk(clock, out, x_coord, y_coord, x, y, colour, writeEn);
 
 endmodule
 
 module Kevin_topramsprite(clk, addr_read, out);
 
 	input clk; //should be CLOCK_50
-	input [9:0] addr_read;
+	input [7:0] addr_read;
 	output [15:0] out;
 	
 	wire wren;
 	wire [15:0] value;
-	reg [9:0] address;
-	reg [9:0] addr_write;
+	reg [7:0] address;
+	reg [7:0] addr_write;
 	
 	Kevin_RAM_IN snow0(out, addr_read, wren);
 	
 	initial begin
-		addr_write <= 10'b0;
+		addr_write <= 8'b0;
 	end
 	
 	always @(posedge clk) begin
@@ -39,7 +39,7 @@ module Kevin_topramsprite(clk, addr_read, out);
 			addr_write <= addr_write + 1;
 			address <= addr_write;
 		end
-		else if (wren == 1'b0) begin
+		else begin
 			address <= addr_read;
 		end
 	end
@@ -48,35 +48,35 @@ endmodule
 
 module Kevin_RAM_IN (pix_val, indx, wren);
 
-input [9:0] indx;
+input [7:0] indx;
 output [15:0] pix_val;
 output reg wren;
 
 reg [15:0] pix_val;
-reg [15:0] in_ram [219:0];
+reg [15:0] in_ram_kev [219:0];
 
 always @ (indx) begin
-  pix_val = in_ram [indx];
+  pix_val = in_ram_kev [indx];
   wren = pix_val[0];
 end
 
 initial
 begin
-  $readmemb("Kevin.txt", in_ram);
+  $readmemb("Kevin.txt", in_ram_kev);
 end
 
 endmodule
 
 module drawKevin(clock, addr_read);
 	input clock;
-	output reg [9:0] addr_read;
-	initial addr_read = 10'b0;
+	output reg [7:0] addr_read;
+	initial addr_read = 8'b0;
 	always @ (posedge clock) begin
-		if (addr_read < 10'd220) begin
+		if (addr_read < 8'd220) begin
 			addr_read <= addr_read + 1'b1;
 		end
 		else begin
-			addr_read <= 10'b0;
+			addr_read <= 8'b0;
 		end
 	end
 endmodule
