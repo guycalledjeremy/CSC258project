@@ -45,6 +45,10 @@ module SpriteAnimation
 //	wire [15:0] out;
 //	wire [9:0] addr_read;
 
+	wire go_up = ~KEY[2];
+	wire go_down = ~KEY[3];
+	
+
 	// Create an Instance of a VGA controller - there can be only one!
 	// Define the number of colours as well as the initial background
 	// image file (.MIF) for the controller.
@@ -115,7 +119,7 @@ module SpriteAnimation
    wire wren_out;
 //	datapath d0(CLOCK_50, resetn, KEY[2], x, y, colour, wren_out);
 
-	datapath d0(CLOCK_50, resetn, x, y, colour, wren_out);
+	datapath d0(CLOCK_50, resetn, go_up, go_down, x, y, colour, wren_out);
 	
 endmodule
 
@@ -196,8 +200,8 @@ module coordshifter(clock, reset, go_back, snowx_coord, snowy_coord);
 	end
 endmodule
 
-module datapath(clock, resetn, x_out, y_out, colour_out, wren_out);
-	input clock, resetn;
+module datapath(clock, resetn, go_up, go_down, x_out, y_out, colour_out, wren_out);
+	input clock, resetn, go_up, go_down;
 	output reg [7:0] x_out;
 	output reg [6:0] y_out;
 	output reg [2:0] colour_out;
@@ -215,8 +219,25 @@ module datapath(clock, resetn, x_out, y_out, colour_out, wren_out);
 	wire [6:0] y;
 	wire [2:0] colour;
 	wire writeEn_out;
+	
+	reg [6:0] kev_y;
+	always @(posedge halfc1) begin
+		if (~resetn) begin
+			kev_y <= 7'd50;
+		end
+		else begin
+			if (go_up && (kev_y > 7'b0)) begin
+				kev_y <= kev_y - 1'b1;
+			end
+			else begin
+				if (go_down && (kev_y < 7'd98)) begin
+					kev_y <= kev_y + 1'b1;
+				end 
+			end 
+		end
+	end
 
-	Kevin k0(clock, 8'd5, 7'd50, x_k, y_k, colour_k, writeEn_k);
+	Kevin k0(clock, 8'd5, kev_y, x_k, y_k, colour_k, writeEn_k);
 	
 	topramsprite snow(clock, addr_read, out);
 	drawsnowman d0(clock, addr_read);
@@ -225,8 +246,10 @@ module datapath(clock, resetn, x_out, y_out, colour_out, wren_out);
 	wire [7:0] x_coord;
 	wire [6:0] y_coord;
 	wire onesecond;
+	wire halfc1;
 		
 	slowclk c1(clock, ~resetn, 1'b1, 2'b11, onesecond);
+	slowclk c2(clock, ~resetn, 1'b1, 2'b01, halfc1);
 	coordshifter cs0(onesecond, resetn, 1'b1, x_coord, y_coord);
 	
 	wire spawn;

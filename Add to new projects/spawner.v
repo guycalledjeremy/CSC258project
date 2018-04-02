@@ -68,7 +68,7 @@ module slowclk (clk, reset, enable, frequency, out);
 
 	wire [27:0] w1hz, w2hz, w3hz;
 
-	ratedivider r1hz(enable, {2'b00, 26'd49999999}, clk, reset, w1hz);
+	ratedivider r3hz(enable, {6'b0, 22'd4165165}, clk, reset, w1hz);
 	ratedivider r60hz(enable, {8'b0, 20'd833333}, clk, reset, w2hz);
 	ratedivider r6hz(enable, {5'b00000, 23'd8333333}, clk, reset, w3hz);
 
