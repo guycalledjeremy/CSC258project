@@ -89,8 +89,8 @@ module SpriteAnimation
 		wire [6:0] y_coord;
 		wire onesecond;
 		
-		slowclk c1(CLOCK_50, ~KEY[0], 1'b1, 2'b01, onesecond);
-		coordshifter cs0(onesecond, resetn, x_coord, y_coord);
+		slowclk c1(CLOCK_50, ~KEY[0], 1'b1, 2'b11, onesecond);
+		coordshifter cs0(onesecond, resetn, ~KEY[3], x_coord, y_coord);
 		
 		assign LEDR [0] = x_coord[0];
 		assign LEDR [1] = x_coord[1];
@@ -114,7 +114,6 @@ module SpriteAnimation
    end
   end
   // Block ends
-
     
 endmodule
 
@@ -154,14 +153,19 @@ module translateout(clock, out, coord_x, coord_y, x, y, colour, writeEn);
 	always @ (posedge clock) begin
 		x <= coord_x + x_rel;
 		y <= coord_y + y_rel;
-		colour <= col;
 		writeEn <= wren;
+		if (coord_x == 8'b0) begin
+			colour <= 3'b0;
+		end
+		else begin
+			colour <= col;
+		end
 	end
 
 endmodule
 
-module coordshifter(clock, reset, snowx_coord, snowy_coord);
-	input clock, reset;
+module coordshifter(clock, reset, go_back, snowx_coord, snowy_coord);
+	input clock, reset, go_back;
 	
 	output reg [7:0] snowx_coord;
 //	initial snowx_coord = 8'b00001011;
@@ -169,14 +173,19 @@ module coordshifter(clock, reset, snowx_coord, snowy_coord);
 	output reg [6:0] snowy_coord;
 //	initial snowy_coord = 7'b0010111;
 		
-	always @ (posedge clock, negedge reset) begin
+	always @ (posedge clock) begin
 		if (!reset   ) begin
-			snowx_coord <= 8'b00001011;
+			snowx_coord <= 8'd138;
 			snowy_coord <= 7'b0010111;
 		end
 		else begin 
 			if (snowx_coord == 8'b0) begin
-				snowx_coord <= 8'b00001011;
+				if (go_back) begin
+					snowx_coord <= 8'd138;
+				end
+				else begin 
+				snowx_coord <= 8'b0;
+				end
 			end
 			else begin
 				snowx_coord <= snowx_coord - 1'b1;
