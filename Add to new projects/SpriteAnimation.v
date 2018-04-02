@@ -41,6 +41,7 @@ module SpriteAnimation
 	wire [7:0] x;
 	wire [6:0] y;
 	wire writeEn;
+	reg writeEn_reg;
 	wire enable,ld_x,ld_y,ld_c;
 //	wire [15:0] out;
 //	wire [9:0] addr_read;
@@ -83,7 +84,15 @@ module SpriteAnimation
 //		drawsnowman d0(CLOCK_50, addr_read);
 //		translateout t0(CLOCK_50, out, x_coord, yout_reg, x, y, colour, writeEn_out);
 		
-		assign writeEn = ~KEY[1];
+		always @(*) begin
+			if (backTOwait) begin 
+				writeEn_reg <= 1'b0;
+			end 
+			else begin 
+				writeEn_reg <= ~KEY[1];
+			end
+		end
+		assign writeEn = writeEn_reg;
 		
 	// Try shifting the snowman left automatically
 //		
@@ -119,7 +128,8 @@ module SpriteAnimation
    wire wren_out;
 //	datapath d0(CLOCK_50, resetn, KEY[2], x, y, colour, wren_out);
 
-	datapath d0(CLOCK_50, resetn, go_up, go_down, x, y, colour, wren_out);
+	wire backTOwait;
+	datapath d0(CLOCK_50, resetn, go_up, go_down, x, y, colour, wren_out, backTOwait);
 	
 endmodule
 
@@ -180,7 +190,7 @@ module coordshifter(clock, reset, go_back, snowx_coord, snowy_coord);
 //	initial snowy_coord = 7'b0010111;
 		
 	always @ (posedge clock, negedge reset) begin
-		if (!reset   ) begin
+		if (!reset) begin
 			snowx_coord <= 8'd138;
 			snowy_coord <= 7'b0010111;
 		end
@@ -200,12 +210,13 @@ module coordshifter(clock, reset, go_back, snowx_coord, snowy_coord);
 	end
 endmodule
 
-module datapath(clock, resetn, go_up, go_down, x_out, y_out, colour_out, wren_out);
+module datapath(clock, resetn, go_up, go_down, x_out, y_out, colour_out, wren_out, backTOwait);
 	input clock, resetn, go_up, go_down;
 	output reg [7:0] x_out;
 	output reg [6:0] y_out;
 	output reg [2:0] colour_out;
 	output reg wren_out;
+	output reg backTOwait;
 	
 	wire [7:0] x_k;
 	wire [6:0] y_k;
@@ -224,20 +235,28 @@ module datapath(clock, resetn, go_up, go_down, x_out, y_out, colour_out, wren_ou
 	always @(posedge halfc1) begin
 		if (~resetn) begin
 			kev_y <= 7'd50;
+			backTOwait <= 1'b0;
+		end
+		if ((8'd14 >= x_coord) && (yout_reg <= kev_y + 7'b0010101 ) && (kev_y <= yout_reg + 7'b0100111)) begin
+			backTOwait <= 1'b1;
 		end
 		else begin
-			if (go_up && (kev_y > 7'b0)) begin
+			if (go_up && (kev_y > 7'b0) 366) begin
 				kev_y <= kev_y - 1'b1;
 			end
 			else begin
-				if (go_down && (kev_y < 7'd98)) begin
-					kev_y <= kev_y + 1'b1;
+				if (go_down && (kev_y < 7'd98)) begin 
+					kev_y <= kev_y + 1'b1; 
 				end 
 			end 
-		end
-	end
+		end 
+	end 
 
 	Kevin k0(clock, 8'd5, kev_y, x_k, y_k, colour_k, writeEn_k);
+	
+//	wire [6:0] y_up;
+//	wire [6:0] y_down;
+//	assign y_up = 
 	
 	topramsprite snow(clock, addr_read, out);
 	drawsnowman d0(clock, addr_read);
@@ -261,10 +280,6 @@ module datapath(clock, resetn, go_up, go_down, x_out, y_out, colour_out, wren_ou
 	control(clock, resetn, sprite_num);
   
    always @(posedge clock) begin
-//		x_out <= sprite_num? x_k : x;
-//		y_out <= sprite_num? y_k : y;
-//		colour_out <= sprite_num? colour_k : colour;
-//		wren_out <= sprite_num? writeEn_k : writeEn_out;
 		if (x_coord == 8'b0) begin
 			yout_reg <= yout[5:0] + yout[3:0];
 		end
@@ -304,10 +319,6 @@ module datapath(clock, resetn, go_up, go_down, x_out, y_out, colour_out, wren_ou
 		endcase
 	end
 	
-//		assign x_out = sprite_num? x_k : x;
-//		assign y_out = sprite_num? y_k : y;
-//		assign colour_out = sprite_num? colour_k : colour;
-//		assign wren_out = sprite_num? writeEn_k : writeEn_out;
 endmodule
 
 module control(clock, resetn, sprite_num);
